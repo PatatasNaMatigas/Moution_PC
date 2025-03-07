@@ -71,6 +71,16 @@ public class Page {
             component.mousePressed(e);
     }
 
+    public <T extends Component> ArrayList<T> getComponents(Class<T> cls) {
+        ArrayList<T> comps = new ArrayList<>();
+        for (Component component : components) {
+            if (cls.isInstance(component)) {
+                comps.add(cls.cast(component));
+            }
+        }
+        return comps;
+    }
+
     public final Component getParent() {
         return window.getParent();
     }

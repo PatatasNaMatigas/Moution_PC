@@ -43,6 +43,7 @@ public class NetworkHelper {
                     while ((message = reader.readLine()) != null) {
                         if (listener != null) {
                             listener.onMessageReceived(message);
+                            System.out.println("Message-- " + message);
                         }
                     }
 
@@ -113,7 +114,7 @@ public class NetworkHelper {
 
     public String getDevice() {
         if (socket != null && socket.getInetAddress() != null) {
-            return socket.getInetAddress().getHostName();
+            return socket.getInetAddress() + "";
         }
         return "Unknown Device";
     }

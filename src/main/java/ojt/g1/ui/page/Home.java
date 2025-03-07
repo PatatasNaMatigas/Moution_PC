@@ -2,15 +2,23 @@ package ojt.g1.ui.page;
 
 import ojt.g1.connection.QRGenerator;
 import ojt.g1.ui.components.*;
+import ojt.g1.ui.components.Button;
 import ojt.g1.ui.components.Image;
 import ojt.g1.ui.components.Panel;
 import ojt.g1.ui.core.Page;
 import ojt.g1.ui.core.Window;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 public class Home extends Page {
 
@@ -28,6 +36,8 @@ public class Home extends Page {
         super("HOME", window);
 
         create();
+//        saveButtonData();
+        saveTextData();
     }
 
     @Override
@@ -80,5 +90,69 @@ public class Home extends Page {
         connectedDevicesTitle.setFont(Resource.getFont("citrus.ttf", 16), Color.BLACK);
         connectedDevicesTitle.setAlignment(TextAlignment.CENTER);
         addComponent(connectedDevicesTitle);
+    }
+
+    public void saveButtonData() {
+        ArrayList<Button> buttons = getComponents(Button.class);
+
+        JSONArray buttonArray = new JSONArray();
+
+        for (Button button : buttons) {
+            JSONObject jsonObject = new JSONObject();
+            try {
+                jsonObject.put("id", button.getId());
+                jsonObject.put("x", button.getX());
+                jsonObject.put("y", button.getY());
+                jsonObject.put("width", button.getWidth());
+                jsonObject.put("height", button.getHeight());
+
+                // Store an action identifier (e.g., method name, button tag)
+                jsonObject.put("action", button.getTag() != null ? button.getTag().toString() : "defaultAction");
+
+                buttonArray.put(jsonObject);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        File file = new File("buttons.json");
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(buttonArray.toString(4));
+            writer.flush();
+        } catch (IOException | JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void saveTextData() {
+        ArrayList<Text> texts = getComponents(Text.class);
+
+        JSONArray buttonArray = new JSONArray();
+
+        for (Text text : texts) {
+            JSONObject jsonObject = new JSONObject();
+            try {
+                jsonObject.put("id", text.getId());
+                jsonObject.put("x", text.getX());
+                jsonObject.put("y", text.getY());
+                jsonObject.put("width", text.getWidth());
+                jsonObject.put("height", text.getHeight());
+
+                // Store an action identifier (e.g., method name, text tag)
+                jsonObject.put("action", text.getTag() != null ? text.getTag().toString() : "defaultAction");
+
+                buttonArray.put(jsonObject);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        File file = new File("texts.json");
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(buttonArray.toString(4));
+            writer.flush();
+        } catch (IOException | JSONException e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -12,6 +12,7 @@ public class Component {
     private Rectangle2D bounds;
 
     private int id;
+    private String tag = "";
 
     protected int x;
     protected int y;
@@ -188,6 +189,30 @@ public class Component {
 
     public int getId() {
         return id;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public int getWidth() {
+        return w;
+    }
+
+    public int getHeight() {
+        return h;
+    }
+
+    public String getTag() {
+        return tag;
+    }
+
+    public void setTag(String tag) {
+        this.tag = tag;
     }
 
     public void draw(Graphics2D g) {}
