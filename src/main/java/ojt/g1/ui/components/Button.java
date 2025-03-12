@@ -22,7 +22,7 @@ public class Button extends Component {
         super(x, y, w, h);
     }
 
-    public void setColor(Color color) {
+    public void setBackground(Color color) {
         this.color = color;
     }
 
@@ -51,7 +51,7 @@ public class Button extends Component {
         this.textColor = textColor;
     }
 
-    public void setAlignment(TextAlignment textAlignment) {
+    public void setTextAlignment(TextAlignment textAlignment) {
         this.textAlignment = textAlignment;
     }
 

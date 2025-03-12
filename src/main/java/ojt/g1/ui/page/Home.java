@@ -1,6 +1,7 @@
 package ojt.g1.ui.page;
 
 import ojt.g1.connection.QRGenerator;
+import ojt.g1.moution.Moution;
 import ojt.g1.ui.components.*;
 import ojt.g1.ui.components.Button;
 import ojt.g1.ui.components.Image;
@@ -30,7 +31,10 @@ public class Home extends Page {
             300,
             300
     );
-    private Text connectedDevicesTitle = new Text(0, 0, 300, 0);
+    private Text connectedDeviceTitle = new Text(0, 0, 300, 0);
+    private Button disconnectDevice = new Button(0, 0, 150, 50);
+
+    private Window window;
 
     public Home(Window window) {
         super("HOME", window);
@@ -66,30 +70,30 @@ public class Home extends Page {
         qrCode.setImage(generate);
         addComponent(qrCode);
 
-        connectedDevicesTitle.setLayoutConstraints(ConstraintType.START_TO_START, getParent());
-        connectedDevicesTitle.setLayoutConstraints(ConstraintType.TOP_TO_BOTTOM, qrCode);
-        connectedDevicesTitle.setText("Connected Device: none");
-        connectedDevicesTitle.setFont(Resource.getFont("citrus.ttf", 16), Color.BLACK);
-        connectedDevicesTitle.setAlignment(TextAlignment.CENTER);
-        addComponent(connectedDevicesTitle);
+        connectedDeviceTitle.setLayoutConstraints(ConstraintType.START_TO_START, getParent());
+        connectedDeviceTitle.setLayoutConstraints(ConstraintType.TOP_TO_BOTTOM, qrCode);
+        connectedDeviceTitle.setText("Connected Device: none");
+        connectedDeviceTitle.setFont(Resource.getFont("citrus.ttf", 16), Color.BLACK);
+        connectedDeviceTitle.setAlignment(TextAlignment.CENTER);
+        addComponent(connectedDeviceTitle);
     }
 
     public void onDeviceConnect(String deviceName) {
-        connectedDevicesTitle.setLayoutConstraints(ConstraintType.START_TO_START, getParent());
-        connectedDevicesTitle.setLayoutConstraints(ConstraintType.TOP_TO_BOTTOM, qrCode);
-        connectedDevicesTitle.setText("Connected Device: " + deviceName);
-        connectedDevicesTitle.setFont(Resource.getFont("citrus.ttf", 16), Color.BLACK);
-        connectedDevicesTitle.setAlignment(TextAlignment.CENTER);
-        addComponent(connectedDevicesTitle);
+        connectedDeviceTitle.setLayoutConstraints(ConstraintType.START_TO_START, getParent());
+        connectedDeviceTitle.setLayoutConstraints(ConstraintType.TOP_TO_BOTTOM, qrCode);
+        connectedDeviceTitle.setText("Connected Device: " + deviceName);
+        connectedDeviceTitle.setFont(Resource.getFont("citrus.ttf", 16), Color.BLACK);
+        connectedDeviceTitle.setAlignment(TextAlignment.CENTER);
+        addComponent(connectedDeviceTitle);
     }
 
     public void onDeviceDisconnect() {
-        connectedDevicesTitle.setLayoutConstraints(ConstraintType.START_TO_START, getParent());
-        connectedDevicesTitle.setLayoutConstraints(ConstraintType.TOP_TO_BOTTOM, qrCode);
-        connectedDevicesTitle.setText("Connected Device: None");
-        connectedDevicesTitle.setFont(Resource.getFont("citrus.ttf", 16), Color.BLACK);
-        connectedDevicesTitle.setAlignment(TextAlignment.CENTER);
-        addComponent(connectedDevicesTitle);
+        connectedDeviceTitle.setLayoutConstraints(ConstraintType.START_TO_START, getParent());
+        connectedDeviceTitle.setLayoutConstraints(ConstraintType.TOP_TO_BOTTOM, qrCode);
+        connectedDeviceTitle.setText("Connected Device: None");
+        connectedDeviceTitle.setFont(Resource.getFont("citrus.ttf", 16), Color.BLACK);
+        connectedDeviceTitle.setAlignment(TextAlignment.CENTER);
+        addComponent(connectedDeviceTitle);
     }
 
     public void saveButtonData() {

@@ -16,6 +16,7 @@ import java.net.UnknownHostException;
 public class Moution {
 
     private Home home;
+    public static NetworkHelper networkHelper;
 
     public Moution() {
         PageHandler pageHandler = new PageHandler();
@@ -30,7 +31,7 @@ public class Moution {
 
         Action action = new Action();
 
-        NetworkHelper networkHelper = new NetworkHelper();
+        networkHelper = new NetworkHelper();
         networkHelper.setEventOnDeviceConnect(() -> {
             moution.home.onDeviceConnect(networkHelper.getDevice());
         });

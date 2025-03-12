@@ -10,7 +10,6 @@ public class NetworkHelper {
     private Socket socket;
     private PrintWriter writer;
     private BufferedReader reader;
-    private MessageListener listener;
     private BlockingQueue<String> messageQueue = new LinkedBlockingQueue<>();
     private volatile boolean running = true;
     private Runnable onConnect;
@@ -36,7 +35,6 @@ public class NetworkHelper {
                     System.out.println("Connected to: " + socket.getInetAddress());
 
                     setupStreams();
-                    this.listener = listener;
 
                     // Continuously listen for messages
                     String message;
