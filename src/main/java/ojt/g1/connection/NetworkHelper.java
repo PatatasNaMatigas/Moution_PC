@@ -14,6 +14,7 @@ public class NetworkHelper {
     private volatile boolean running = true;
     private Runnable onConnect;
     private Runnable onDisconnect;
+    private Runnable onMessagesEmpty;
 
     public interface MessageListener {
         void onMessageReceived(String message);
@@ -28,29 +29,24 @@ public class NetworkHelper {
         new Thread(() -> {
             while (true) { // Infinite loop to restart after disconnection
                 try (ServerSocket serverSocket = new ServerSocket(port)) {
-                    System.out.println("Waiting for connection...");
                     socket = serverSocket.accept();
                     if (onConnect != null)
                         onConnect.run();
-                    System.out.println("Connected to: " + socket.getInetAddress());
 
                     setupStreams();
 
-                    // Continuously listen for messages
                     String message;
                     while ((message = reader.readLine()) != null) {
                         if (listener != null) {
                             listener.onMessageReceived(message);
-                            System.out.println("Message-- " + message);
                         }
+                        if (onMessagesEmpty != null)
+                            onMessagesEmpty.run();
                     }
 
-                    System.out.println("Client disconnected! Restarting server...");
                     if (onDisconnect != null)
                         onDisconnect.run();
-                } catch (IOException e) {
-                    System.out.println("Error: " + e.getMessage());
-                }
+                } catch (IOException e) {}
             }
         }).start();
     }
@@ -108,6 +104,10 @@ public class NetworkHelper {
 
     public void setEventOnDeviceDisconnect(Runnable onDisconnect) {
         this.onDisconnect = onDisconnect;
+    }
+
+    public void setEventOnMessagesEmpty(Runnable onMessagesEmpty) {
+        this.onMessagesEmpty = onMessagesEmpty;
     }
 
     public String getDevice() {

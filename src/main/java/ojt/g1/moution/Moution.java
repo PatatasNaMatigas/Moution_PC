@@ -1,15 +1,13 @@
 package ojt.g1.moution;
 
 import ojt.g1.connection.NetworkHelper;
-import ojt.g1.connection.QRGenerator;
 import ojt.g1.input.Action;
 import ojt.g1.input.Decode;
 import ojt.g1.ui.core.PageHandler;
 import ojt.g1.ui.core.Window;
+import ojt.g1.ui.core.WindowParams;
 import ojt.g1.ui.page.Home;
 
-import java.awt.image.BufferedImage;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 
@@ -21,6 +19,11 @@ public class Moution {
     public Moution() {
         PageHandler pageHandler = new PageHandler();
         Window window = new Window(pageHandler, 800, 500);
+        window.setWindowParams(
+                new WindowParams.Builder()
+                        .title("Moution")
+                        .build()
+        );
         home = new Home(window);
         pageHandler.addPage(home);
         window.create();
@@ -38,17 +41,21 @@ public class Moution {
         networkHelper.setEventOnDeviceDisconnect(() -> {
             moution.home.onDeviceDisconnect();
         });
+        networkHelper.setEventOnMessagesEmpty(() -> {
+            action.stopXScroll();
+            System.out.println("Waiting for messages...");
+        });
         networkHelper.startServer(25135, message -> {
             if (Decode.isInputType(message)) {
                 Decode.Code code = Decode.decode(message);
-                System.out.println("Received: " + message + " Code: " + Decode.translate(code.getCode()) + " Tag: " + Decode.translate(code.getTag()));
                 action.perform(Decode.decode(message));
+                System.out.println("Received: " + message + " Code: " + Decode.translate(code.getCode()) + " Tag: " + Decode.translate(code.getTag()));
             } else if (Decode.isMouseMove(message)) {
-                System.out.println("Received: " + message);
                 action.mouseMove(message);
-            } else if (Decode.isMouseScroll(message)) {
                 System.out.println("Received: " + message);
+            } else if (Decode.isMouseScroll(message)) {
                 action.scroll(message);
+                System.out.println("Received: " + message);
             }
         });
     }
