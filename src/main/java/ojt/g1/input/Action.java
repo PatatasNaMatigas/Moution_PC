@@ -80,4 +80,16 @@ public class Action {
             xScrolling = false;
         }
     }
+
+    public void zoom(String code) {
+        String[] data = code.split("%");
+
+        robot.keyPress(KeyEvent.VK_CONTROL);
+        if (data[1].equals("i")) {
+            robot.mouseWheel(-1);
+        } else if (data[1].equals("o")) {
+            robot.mouseWheel(1);
+        }
+        robot.keyRelease(KeyEvent.VK_CONTROL);
+    }
 }

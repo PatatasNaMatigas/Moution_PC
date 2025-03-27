@@ -56,6 +56,9 @@ public class Moution {
             } else if (Decode.isMouseScroll(message)) {
                 action.scroll(message);
                 System.out.println("Received: " + message);
+            } else if (Decode.isZoom(message)) {
+                action.zoom(message);
+                System.out.println("Received: " + message);
             }
         });
     }

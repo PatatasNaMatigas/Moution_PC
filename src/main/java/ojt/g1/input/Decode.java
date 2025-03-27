@@ -57,6 +57,10 @@ public class Decode {
         return code.split("%")[0].equals("sc");
     }
 
+    public static boolean isZoom(String code) {
+        return code.split("%")[0].equals("zm");
+    }
+
     public static class Code {
         private int code;
         private int tag;
