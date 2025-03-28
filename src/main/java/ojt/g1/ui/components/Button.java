@@ -32,6 +32,7 @@ public class Button extends Component {
 
     public void setOnClickListener(Runnable onCLickEvent) {
         this.onClickEvent = onCLickEvent;
+        System.out.println("het");
     }
 
     public void setOnClickListener(Runnable onCLickEvent, ActionType actionType) {
@@ -83,6 +84,7 @@ public class Button extends Component {
     public void draw(Graphics2D g) {
         g.setColor(color);
         g.fill(getBounds());
+        System.out.println(getHeight());
 
         if (text != null && !text.isEmpty()) {
             g.setColor(textColor);

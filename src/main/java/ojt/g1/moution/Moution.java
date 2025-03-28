@@ -45,21 +45,6 @@ public class Moution {
             action.stopXScroll();
             System.out.println("Waiting for messages...");
         });
-        networkHelper.startServer(25135, message -> {
-            if (Decode.isInputType(message)) {
-                Decode.Code code = Decode.decode(message);
-                action.perform(Decode.decode(message));
-                System.out.println("Received: " + message + " Code: " + Decode.translate(code.getCode()) + " Tag: " + Decode.translate(code.getTag()));
-            } else if (Decode.isMouseMove(message)) {
-                action.mouseMove(message);
-                System.out.println("Received: " + message);
-            } else if (Decode.isMouseScroll(message)) {
-                action.scroll(message);
-                System.out.println("Received: " + message);
-            } else if (Decode.isZoom(message)) {
-                action.zoom(message);
-                System.out.println("Received: " + message);
-            }
-        });
+        networkHelper.startServer(25135);
     }
 }
