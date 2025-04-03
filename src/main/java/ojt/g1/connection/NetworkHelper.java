@@ -6,17 +6,19 @@ import ojt.g1.input.Decode;
 import java.io.*;
 import java.net.*;
 import java.util.ArrayList;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 
 public class NetworkHelper {
 
-    public static ArrayList<NetworkEntry> networkEntries = new ArrayList<>();
-    private BlockingQueue<String> messageQueue = new LinkedBlockingQueue<>();
+    private final ExecutorService executor = Executors.newCachedThreadPool();
+    public static final ArrayList<NetworkEntry> networkEntries = new ArrayList<>();
+    private final BlockingQueue<String> messageQueue = new LinkedBlockingQueue<>();
     private Runnable onConnect;
     private Runnable onDisconnect;
     private Runnable onMessagesEmpty;
-    private boolean running = false;
+    private volatile boolean running = false;
+    private volatile boolean serverAvailable = false;
+    private Action action = new Action();
 
     public interface MessageListener {
         void onMessageReceived(String message);
@@ -27,113 +29,129 @@ public class NetworkHelper {
      * @param port The port to listen on
      */
     public void startServer(int port) {
-        NetworkEntry networkEntry = new NetworkEntry();
-        new Thread(() -> {
-            while (true) { // Infinite loop to restart after disconnection
-                try (ServerSocket serverSocket = new ServerSocket(port)) {
-                    networkEntry.socket = serverSocket.accept();
-                    if (onConnect != null)
-                        onConnect.run();
+        if (serverAvailable) return; // Prevent multiple starts
 
-                    setupStreams(networkEntry);
+        serverAvailable = true;
 
-                    String message;
-                    while ((message = networkEntry.reader.readLine()) != null) {
-                        messageQueue.add(message);
-                        System.out.println(message);
-                        if (onMessagesEmpty != null)
-                            onMessagesEmpty.run();
-                    }
+        executor.submit(() -> {
+            try (ServerSocket serverSocket = new ServerSocket(port)) {
+                System.out.println("Server started on port: " + port);
 
-                    if (onDisconnect != null)
-                        onDisconnect.run();
-                } catch (IOException e) {}
+                while (!serverSocket.isClosed()) {
+                    Socket clientSocket = serverSocket.accept();
+                    System.out.println("New device connected: " + clientSocket.getInetAddress());
+
+                    if (onConnect != null) onConnect.run();
+
+                    NetworkEntry networkEntry = new NetworkEntry(clientSocket);
+                    networkEntries.add(networkEntry);
+
+                    handleClient(networkEntry);
+                }
+            } catch (IOException e) {
+                System.out.println("Server stopped.");
+            } finally {
+                stopServer();
             }
-        }).start();
-        networkEntries.add(networkEntry);
+        });
+    }
+
+    private void handleClient(NetworkEntry networkEntry) {
+        executor.submit(() -> {
+            try {
+                String message;
+                while ((message = networkEntry.reader.readLine()) != null) {
+                    messageQueue.put(message);
+                    if (onMessagesEmpty != null) onMessagesEmpty.run();
+                }
+            } catch (IOException | InterruptedException ignored) {
+
+            } finally {
+                close(networkEntry);
+                if (onDisconnect != null) onDisconnect.run();
+            }
+        });
+
         readMessage();
     }
 
     public void readMessage() {
-        if (running)
-            return;
+        if (running) return;
 
         running = true;
 
-        new Thread(() -> {
-            Action action = new Action();
-            MessageListener messageListener = message -> {
-                if (Decode.isInputType(message)) {
-                    Decode.Code code = Decode.decode(message);
-                    action.perform(Decode.decode(message));
-                    System.out.println("Received: " + message + " Code: " + Decode.translate(code.getCode()) + " Tag: " + Decode.translate(code.getTag()));
-                } else if (Decode.isMouseMove(message)) {
-                    action.mouseMove(message);
-                    System.out.println("Received: " + message);
-                } else if (Decode.isMouseScroll(message)) {
-                    action.scroll(message);
-                    System.out.println("Received: " + message);
-                } else if (Decode.isZoom(message)) {
-                    action.zoom(message);
-                    System.out.println("Received: " + message);
-                }
-            };
-
-            while (true) {
-                try {
+        executor.submit(() -> {
+            try {
+                while (!networkEntries.isEmpty()) {
+                    MessageListener messageListener = message -> {
+                        if (Decode.isInputType(message)) {
+                            Decode.Code code = Decode.decode(message);
+                            action.perform(code);
+                            System.out.println("Received: " + message + " Code: " + Decode.translate(code.getCode()) + " Tag: " + Decode.translate(code.getTag()));
+                        } else if (Decode.isMouseMove(message)) {
+                            action.mouseMove(message);
+                            System.out.println("Received: " + message);
+                        } else if (Decode.isMouseScroll(message)) {
+                            action.scroll(message);
+                            System.out.println("Received: " + message);
+                        } else if (Decode.isZoom(message)) {
+                            action.zoom(message);
+                            System.out.println("Received: " + message);
+                        } else if (Decode.isShortCut(message)) {
+                            action.performShortCut(message);
+                            System.out.println("Received: " + message);
+                        }
+                    };
                     messageListener.onMessageReceived(messageQueue.take());
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
                 }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                running = false;
             }
-        }).start();
-    }
-
-
-    /**
-     * Connects to a server as a client
-     * @param ip The server's IP address
-     * @param port The server's port
-     */
-    public void connectToServer(String ip, int port) {
-//        new Thread(() -> {
-//            try {
-//                socket = new Socket(ip, port);
-//                writer = new PrintWriter(socket.getOutputStream(), true);
-//
-//                while (running) {
-//                    String message = messageQueue.take(); // Waits for a message to send
-//                    writer.println(message);
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }).start();
+        });
     }
 
     /**
-     * Sends a message through the socket
-     * @param message The message to send
+     * Stops the server and closes all connections.
      */
-    public void sendMessage(String message) {
-        messageQueue.offer(message); // Add message to queue (non-blocking)
-    }
-
-    /**
-     * Closes the connection
-     */
-    public void close(NetworkEntry networkEntry) {
-        networkEntry.running = false;
+    public void stopServer() {
+        serverAvailable = false;
+        for (NetworkEntry entry : new ArrayList<>(networkEntries)) {
+            close(entry);
+        }
+        executor.shutdown(); // Stop accepting new tasks
         try {
-            if (networkEntry.socket != null) networkEntry.socket.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException ignored) {
+            executor.shutdownNow();
         }
     }
 
-    private void setupStreams(NetworkEntry networkEntry) throws IOException {
-        networkEntry.writer = new PrintWriter(networkEntry.socket.getOutputStream(), true);
-        networkEntry.reader = new BufferedReader(new InputStreamReader(networkEntry.socket.getInputStream()));
+    /**
+     * Sends a message through all connected clients
+     * @param message The message to send
+     */
+    public void sendMessage(String message) {
+        for (NetworkEntry entry : networkEntries) {
+            entry.sendMessage(message);
+        }
+    }
+
+    /**
+     * Closes the client connection
+     */
+    public void close(NetworkEntry networkEntry) {
+        networkEntries.remove(networkEntry); // Remove before closing to prevent concurrency issues
+        try {
+            if (networkEntry.socket != null) networkEntry.socket.close();
+            if (networkEntry.reader != null) networkEntry.reader.close();
+            if (networkEntry.writer != null) networkEntry.writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void setEventOnDeviceConnect(Runnable onConnect) {
@@ -162,6 +180,15 @@ public class NetworkHelper {
         Socket socket;
         PrintWriter writer;
         BufferedReader reader;
-        volatile boolean running = true;
+
+        public NetworkEntry(Socket socket) throws IOException {
+            this.socket = socket;
+            this.writer = new PrintWriter(socket.getOutputStream(), true);
+            this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        }
+
+        public void sendMessage(String message) {
+            writer.println(message);
+        }
     }
 }

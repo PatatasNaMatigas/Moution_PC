@@ -7,7 +7,6 @@ import java.awt.event.MouseEvent;
 public class Action {
 
     private Robot robot;
-    private boolean xScrolling = false;
 
     public Action() {
         try {
@@ -20,8 +19,6 @@ public class Action {
     public void perform(Decode.Code code) {
         if (robot == null)
             return;
-
-        stopXScroll();
 
         switch (code.getCode()) {
             case Decode.LMB -> {
@@ -46,7 +43,6 @@ public class Action {
     }
 
     public void mouseMove(String code) {
-        stopXScroll();
         String[] position = code.split("%")[1].split("\\|");
 
         int deltaX = (int) Float.parseFloat(position[0]);
@@ -62,23 +58,7 @@ public class Action {
 
         int scrollAmount = (int) Double.parseDouble(data[1]) > 0 ? 1 : -1;
 
-        if (data[2].equals("y")) {
-            stopXScroll();
-            robot.mouseWheel(scrollAmount);
-        } else if (data[2].equals("x")) {
-            if (!xScrolling) {
-                robot.keyPress(KeyEvent.VK_SHIFT);
-                xScrolling = true;
-            }
-            robot.mouseWheel(scrollAmount);
-        }
-    }
-
-    public void stopXScroll() {
-        if (xScrolling) {
-            robot.keyRelease(KeyEvent.VK_SHIFT);
-            xScrolling = false;
-        }
+        robot.mouseWheel(scrollAmount);
     }
 
     public void zoom(String code) {
@@ -91,5 +71,43 @@ public class Action {
             robot.mouseWheel(1);
         }
         robot.keyRelease(KeyEvent.VK_CONTROL);
+    }
+
+    public void performShortCut(String code) {
+        String[] data = code.split("%");
+
+        switch (data[1]) {
+            case "copy":
+                robot.keyPress(KeyEvent.VK_CONTROL);
+                robot.keyPress(KeyEvent.VK_C);
+                robot.keyRelease(KeyEvent.VK_C);
+                robot.keyRelease(KeyEvent.VK_CONTROL);
+                break;
+
+            case "paste":
+                robot.keyPress(KeyEvent.VK_CONTROL);
+                robot.keyPress(KeyEvent.VK_V);
+                robot.keyRelease(KeyEvent.VK_V);
+                robot.keyRelease(KeyEvent.VK_CONTROL);
+                break;
+
+            case "undo":
+                robot.keyPress(KeyEvent.VK_CONTROL);
+                robot.keyPress(KeyEvent.VK_Z);
+                robot.keyRelease(KeyEvent.VK_Z);
+                robot.keyRelease(KeyEvent.VK_CONTROL);
+                break;
+
+            case "redo":
+                robot.keyPress(KeyEvent.VK_CONTROL);
+                robot.keyPress(KeyEvent.VK_Y);
+                robot.keyRelease(KeyEvent.VK_Y);
+                robot.keyRelease(KeyEvent.VK_CONTROL);
+                break;
+
+            default:
+                System.out.println("Unknown shortcut: " + data[1]);
+                break;
+        }
     }
 }

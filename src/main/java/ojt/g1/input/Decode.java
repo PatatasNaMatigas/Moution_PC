@@ -61,6 +61,10 @@ public class Decode {
         return code.split("%")[0].equals("zm");
     }
 
+    public static boolean isShortCut(String code) {
+        return code.split("%")[0].equals("shc");
+    }
+
     public static class Code {
         private int code;
         private int tag;

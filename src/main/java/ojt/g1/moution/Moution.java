@@ -29,10 +29,8 @@ public class Moution {
         window.create();
     }
 
-    public static void main(String[] args) throws UnknownHostException {
+    public static void main(String[] args) {
         Moution moution = new Moution();
-
-        Action action = new Action();
 
         networkHelper = new NetworkHelper();
         networkHelper.setEventOnDeviceConnect(() -> {
@@ -41,10 +39,5 @@ public class Moution {
         networkHelper.setEventOnDeviceDisconnect(() -> {
             moution.home.onDeviceDisconnect();
         });
-        networkHelper.setEventOnMessagesEmpty(() -> {
-            action.stopXScroll();
-            System.out.println("Waiting for messages...");
-        });
-        networkHelper.startServer(25135);
     }
 }
