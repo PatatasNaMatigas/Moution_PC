@@ -100,9 +100,11 @@ public class Action {
 
             case "redo":
                 robot.keyPress(KeyEvent.VK_CONTROL);
-                robot.keyPress(KeyEvent.VK_Y);
-                robot.keyRelease(KeyEvent.VK_Y);
+                robot.keyPress(KeyEvent.VK_SHIFT);
+                robot.keyPress(KeyEvent.VK_Z);
+                robot.keyRelease(KeyEvent.VK_Z);
                 robot.keyRelease(KeyEvent.VK_CONTROL);
+                robot.keyRelease(KeyEvent.VK_SHIFT);
                 break;
 
             default:
